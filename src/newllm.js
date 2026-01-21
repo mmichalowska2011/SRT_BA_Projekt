@@ -1,0 +1,30 @@
+import ollama from "ollama";
+
+export async function chat(model, prompt) {
+  const res = await ollama.chat({
+    model,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  return (res?.message?.content ?? "").trim();
+}
+
+export function extractJson(text) {
+  const trimmed = text.trim();
+
+  // Reines JSON
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) return JSON.parse(trimmed);
+
+  // JSON code fence
+  const fence = trimmed.match(/```json([\s\S]*?)```/i);
+  if (fence?.[1]) return JSON.parse(fence[1].trim());
+
+  // Best-effort: erstes { bis letztes }
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    return JSON.parse(trimmed.slice(first, last + 1));
+  }
+
+  throw new Error("Kein JSON gefunden.");
+}

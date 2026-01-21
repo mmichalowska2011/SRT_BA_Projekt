@@ -1,0 +1,1 @@
+KNEIFF | KNEIFF_TEST1LNAME | CHAR(80) | Added | Name eines Unternehmens wurde hinzugefügt
