@@ -5,6 +5,7 @@ const BUILD_PAYLOAD_PROMPT = (tableText) =>
   `Du bist ein Assistent für SAP SRT-Schnittstellenwartung. 
 Aufgabe: Erzeuge ein JSON-ARRAY. 
 Pro Zeile im Input entsteht genau EIN Objekt. 
+Bei mehreren Zeilen trenne die JSON-Objekte durch ein Komma.
 Gib NUR JSON aus, keinen zusätzlichen Text. 
 Das JSON-Objekt MUSS exakt diese Keys haben: 
 "Table", "Field Name", "Change Type", "Field Type", "Default", "Null", 
@@ -61,7 +62,7 @@ export class Host {
 
     console.log("\n[Ergebnis] Erkannte Änderungen:");
     console.log(JSON.stringify(extracted, null, 2));  
-    console.log("\n[Info] Später wird hier JSON einen Ausführungsplan erzeugen und Tools orchestrieren.");
+    // console.log("\n[Info] Später wird hier JSON einen Ausführungsplan erzeugen und Tools orchestrieren.");
   }
 
 
