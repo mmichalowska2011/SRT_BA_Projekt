@@ -1,0 +1,35 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "dotenv": "^17.2.3",
+    "ollama": "^0.6.3",
+    "pdf-parse": "^2.4.5",
+    "zod": "3.25.76"
+  },
+  "overrides": {
+    "zod": "3.25.76"
+  },
+  "name": "srt_ba_projekt",
+  "version": "1.0.0",
+  "description": "This repository is for Development of an autonomous AI agent for automated maintenance of heterogeneous reporting interfaces",
+  "main": "newindex.js",
+  "scripts": {
+    "start": "node src/newindex.js",
+    "start:host": "node src/host.js",
+    "start:validate": "node src/servers/validate-server.js",
+    "start:change": "node src/servers/change-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmichalowska2011/SRT_BA_Projekt.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mmichalowska2011/SRT_BA_Projekt/issues"
+  },
+  "homepage": "https://github.com/mmichalowska2011/SRT_BA_Projekt#readme"
+}

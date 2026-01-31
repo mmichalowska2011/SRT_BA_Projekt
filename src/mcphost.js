@@ -1,5 +1,5 @@
-import { readTextFile } from "./newio.js";
-import { chat, extractJson } from "./newllm.js";
+import { readTextFile } from "./io.js";
+import { chat, extractJson } from "./ollama_llm.js";
 
 const BUILD_PAYLOAD_PROMPT = (tableText) => 
   `Du bist ein Assistent für SAP SRT-Schnittstellenwartung. 
