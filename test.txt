@@ -1,1 +1,4 @@
-KNEIFF | KNEIFF_TEST1LNAME | CHAR(80) | Added | Name eines Unternehmens wurde hinzugefügt
+Tabelle: KNEIFF 
+KNEIFF_TEST1LNAME | CHAR(80) 
+Änderung: Neues Feld 
+Beschreibung:  Name eines Unternehmens wurde hinzugefügt

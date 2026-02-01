@@ -1,3 +1,5 @@
+// import "./timeout.js";
+
 import { Host } from "./mcphost.js";
 import { runCli } from "./cli.js";
 

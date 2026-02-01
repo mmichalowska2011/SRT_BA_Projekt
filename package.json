@@ -15,8 +15,8 @@
   "description": "This repository is for Development of an autonomous AI agent for automated maintenance of heterogeneous reporting interfaces",
   "main": "newindex.js",
   "scripts": {
-    "start": "node src/newindex.js",
-    "start:host": "node src/host.js",
+    "start": "node src/index.js",
+    "start:host": "node src/mcphost.js",
     "start:validate": "node src/servers/validate-server.js",
     "start:change": "node src/servers/change-server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
