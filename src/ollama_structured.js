@@ -1,6 +1,16 @@
-import ollama from 'ollama';
+import { Ollama } from "ollama";
+import dotenv from "dotenv";
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+
+dotenv.config();
+
+const ollama = new Ollama({
+  host: "https://ollama.com",
+  headers: {
+    Authorization: "Bearer " + process.env.APIKEY,
+  },
+});
 
 const Mydocument = z.object({
     "Table": z.string(),

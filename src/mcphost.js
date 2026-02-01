@@ -4,7 +4,7 @@ import { chat } from "./ollama_llm.js";
 
 
 export class Host {
-  constructor({ llmModel = "qwen3" } = {}) {
+  constructor({ llmModel = "qwen3-vl:235b" } = {}) {
     this.llmModel = llmModel;
 
     // Platzhalter für spätere Service/MCP-Clients

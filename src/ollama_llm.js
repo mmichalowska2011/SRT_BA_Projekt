@@ -1,9 +1,20 @@
-import ollama from "ollama";
+import { Ollama } from "ollama";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const ollama = new Ollama({
+  host: "https://ollama.com",
+  headers: {
+    Authorization: "Bearer " + process.env.APIKEY,
+  },
+});
 
 export async function chat(model, prompt) {
   const res = await ollama.chat({
     model,
     messages: [{ role: "user", content: prompt }],
+    stream: false,
   });
 
   return (res?.message?.content ?? "").trim();

@@ -1,9 +1,10 @@
-import { setGlobalDispatcher, Agent } from "undici";
+import { Agent, setGlobalDispatcher } from "undici";
 
 setGlobalDispatcher(
   new Agent({
-    headersTimeout: 10 * 60_000, // 10 Min
-    bodyTimeout: 10 * 60_000,    // 10 Min
+    headersTimeout: 600_000,
+    bodyTimeout: 600_000,
     connectTimeout: 30_000,
   })
 );
+
