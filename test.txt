@@ -1,4 +1,17 @@
-Tabelle: KNEIFF 
+ KNEIFF 
 KNEIFF_TEST1LNAME | CHAR(80) 
-Änderung: Neues Feld 
-Beschreibung:  Name eines Unternehmens wurde hinzugefügt
+ Neues Feld 
+  Name eines Unternehmens wurde hinzugefügt
+
+   KNEI2F 
+KNEIFF_TEST2LNAME | CHAR(80) 
+ Neues Feld 
+  Name eines Unternehmens wurde hinzugefügt
+   KNEIFF 
+KNEIFF_TEST13NAME | CHAR(80) 
+ Neues Feld 
+  Name eines Unternehmens wurde hinzugefügt
+   KNEI2F 
+KNEIFF_TEST4LNAME | CHAR(80) 
+ Neues Feld 
+  Name eines Unternehmens wurde hinzugefügt

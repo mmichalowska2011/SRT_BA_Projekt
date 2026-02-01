@@ -15,7 +15,7 @@ const ollama = new Ollama({
 const Mydocument = z.object({
     "Table": z.string(),
     "Field Name": z.string(), 
-    "Change Type": z.literal("Added"),
+    "Change Type": z.enum(["Added", "Removed", "Changed"]),
     "Field Type": z.string(),
     "Default": z.null(),
     "Null": z.literal("not null"),
@@ -70,15 +70,6 @@ export async function chatStructured(model, tableText) {
   });
 
   const json = JSON.parse(response.message.content);
-  return MyArraySchema.parse(json);
+  const parsed = MyArraySchema.parse(json);
+  return parsed.filter(x => x["Change Type"] === "Added");
 }
-
-
-// const response = await ollama.chat({
-//     model: 'qwen3',
-//     messages: [{ role: 'user', content: prompt }],
-//     format: zodToJsonSchema(MyArraySchema),
-// });
-
-// const parsed = MyArraySchema.parse(JSON.parse(response.message.content));
-// console.log(parsed);
