@@ -17,7 +17,7 @@ export async function runCli(actions) {
       console.log("\n=== SRT MCP Host ===");
       console.log("1) Aktuelle Versionen abfragen");
       console.log("2) Objekt-Existenz prüfen");
-      console.log("3) Struktur kopieren (Suffix)");
+      // console.log("3) Struktur kopieren (Suffix)");
       console.log("4) Feld zu Struktur hinzufügen");
       console.log("0) Exit");
 
@@ -38,11 +38,11 @@ export async function runCli(actions) {
         }
 
      
-        case "3": {
-        const filePath = (await rl.question("Pfad zur BAIS/SQL Textdatei: ")).trim();
-        await actions.generatePlan({ filePath });
-        break;
-        }
+        // case "3": {
+        // const filePath = (await rl.question("Pfad zur BAIS/SQL Textdatei: ")).trim();
+        // await actions.generatePlan({ filePath });
+        // break;
+        // }
 
 
         case "4": {

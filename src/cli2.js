@@ -1,3 +1,4 @@
+// Liefert eine Promise-basierte Variante von readline. Dadurch kann man await rl.question(...) verwenden, statt Callback- oder Event-Handling
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 

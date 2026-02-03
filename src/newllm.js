@@ -1,8 +1,19 @@
-import ollama from "ollama";
+import { Ollama } from "ollama";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const ollama = new Ollama({
+  host: "https://ollama.com",
+  headers: {
+    Authorization: "Bearer " + process.env.APIKEY,
+  },
+});
+
 
 export async function chat(model, prompt) {
   const res = await ollama.chat({
-    model,
+    model: 'qwen3-vl:235b',
     messages: [{ role: "user", content: prompt }],
   });
 
@@ -18,7 +29,7 @@ export function extractJson(text) {
   // JSON code fence
   const fence = trimmed.match(/```json([\s\S]*?)```/i);
   if (fence?.[1]) return JSON.parse(fence[1].trim());
-
+  
   // Best-effort: erstes { bis letztes }
   const first = trimmed.indexOf("{");
   const last = trimmed.lastIndexOf("}");
