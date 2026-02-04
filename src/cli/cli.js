@@ -9,7 +9,8 @@ export async function runCli(host) {
       console.log("\n SRT Wartungs-Host. Wähle:");
       console.log("1) Aktuelle Version im System abfragen (Platzhalter).");
       console.log("2) Dokument laden und auf Änderungen prüfen.");
-      console.log("3) Eine Frage stellen.");
+      console.log("3) Datenelemente auflisten.");
+      console.log("4) Eine Frage stellen.");
       console.log("0) Exit.");
 
       const choice = (await rl.question("\nAuswahl: ")).trim();
@@ -26,6 +27,11 @@ export async function runCli(host) {
         }
 
         case "3": {
+          host.showDataElementsList();
+          break;
+        }
+
+        case "4": {
           const question = (await rl.question("Frage: ")).trim();
           await host.askLlm(question);
           break;
@@ -37,7 +43,7 @@ export async function runCli(host) {
 
         default:
           console.log("Ungültige Auswahl.");
-          // ------ Apassen: zurück zur Menüauswahl -------
+        // ------ Apassen: zurück zur Menüauswahl -------
       }
     }
   } finally {
