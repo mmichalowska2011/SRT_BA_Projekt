@@ -17,6 +17,7 @@
   "main": "newindex.js",
   "scripts": {
     "start": "node src/index.js",  
+    "connect": "node src/connectivity_check.js",  
     "start:validate": "node src/servers/validate-server.js",
     "start:change": "node src/servers/change-server.js"
   },

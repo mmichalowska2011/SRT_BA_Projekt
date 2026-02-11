@@ -1,0 +1,17 @@
+[
+    {
+        "Table": "KNEIFF",
+        "Field Name": "KNEIFF_TEST2CONN",
+        "Change Type": "Added",
+        "Field Type": "CHAR(80)",
+        "Default": null,
+        "Null": "not null",
+        "Description": "Test der Verbindung zum System",
+        "Documentation": "Test der Verbindung zum System",
+        "Documentation_Default": null,
+        "Field Label Short": "Test der V",
+        "Field Label Middle": "Test der Verbindung ",
+        "Field Label Long": "Test der Verbindung zum System",
+        "Field Label Header": "Test der V"
+    }
+]

@@ -1,6 +1,7 @@
 import { readTextFile } from "../io.js";
 import { chatStructured } from "../llm/ollama_structured.js";
 import { chat } from "../llm/ollama_llm.js";
+import { STATES, getStateText } from "../states/states.js";
 
 
 export class Host {
@@ -11,7 +12,7 @@ export class Host {
     this.clients = new Map();
 
     // State und Ergebnisse speichern
-    this.state = "INITIAL";
+    this.state = STATES.INITIAL;
     // this.lastChanges = null;
     this.lastChanges = [];
     this.lastSourceFile = null;
@@ -34,14 +35,14 @@ export class Host {
 
       // State abhängig davon, ob neue Datenelemente existieren
       const dataElements = this.listDataElementsToCreate();
-      this.state = dataElements.length > 0 ? "VALID" : "ANALYZED";
+      this.state = dataElements.length > 0 ? STATES.VALID : STATES.ANALYZED;
 
 
       console.log("\nDokument wurde erfolgreich analysiert.");
       if (this.state === "VALID") {
         console.log("Es wurden neue Datenelemente erkannt. Du kannst sie über die Liste anzeigen lassen.");
       } else {
-        console.log("[Info] Keine neuen Datenelemente erkannt (Liste wäre leer).");
+        console.log("[Info] Keine neuen Datenelemente erkannt.");
       }
     } catch (e) {
       console.log("\n[host] Structured Output Fehler:");
@@ -98,34 +99,23 @@ export class Host {
   }
 
 
-  getStateInfo() {
-    if (this.state === "INITIAL") {
-      return "Ich befinde mich im Status 'INITIAL'. Es wurde noch kein Dokument analysiert. Wenn du möchtest, wähle im Menü Option 2 und lade eine .txt Datei zur Analyse.";
-    }
-
-    if (this.state === "ANALYZED") {
-      const count = Array.isArray(this.lastChanges) ? this.lastChanges.length : 0;
-      const fileInfo = this.lastSourceFile ? `(Quelle: ${this.lastSourceFile})` : "";
-      return `Ich befinde mich im Status 'ANALYZED'.${fileInfo} Ich habe ${count} Änderung(en) erkannt. Du kannst dir die Liste der Datenelemente anzeigen lassen oder ein weiteres Dokument analysieren.`;
-    }
-    if (this.state === "VALID") {
-      const count = Array.isArray(this.lastChanges) ? this.lastChanges.length : 0;
-      const fileInfo = this.lastSourceFile ? ` (Quelle: ${this.lastSourceFile})` : "";
-      return `Ich befinde mich im Status 'VALID'.${fileInfo}. Es wurden ${count} Änderung(en) erkannt. Du kannst dir die Datenelemente anzeigen lassen (Option 3) oder ein weiteres Dokument analysieren (Option 2).`;
-    }
-
-    return `Ich befinde mich im Status '${this.state}'.`;
-  }
 
   async askLlm(question) {
     const questions = question.toLowerCase().trim();
 
     // Statusabfrage 
-    if (questions.includes("status") || questions.includes("zustand")) {
+    if (questions.includes("status") || questions.includes("zustand") || questions.includes("zust")) {
       console.log("\n[Antwort]");
-      console.log(this.getStateInfo());
+      console.log(
+        getStateText({
+          state: this.state,
+          lastChanges: this.lastChanges,
+          lastSourceFile: this.lastSourceFile,
+        })
+      );
       return;
     }
+
 
     // Liste der Datenelemente
     if (questions.includes("liste") && (questions.includes("datenelement") || questions.includes("data element"))) {
@@ -133,7 +123,7 @@ export class Host {
 
       if (list.length === 0) {
         console.log("\n[Antwort]");
-        console.log("\nEs sind noch keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen (Dokument analysieren).");
+        console.log("\nEs sind noch keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen (Dokument hochladen und analysieren).");
         return;
       }
 

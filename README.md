@@ -41,6 +41,44 @@ APIKEY=DEIN_OLLAMA_API_KEY
 
 > Wichtig: `.env` ist in `.gitignore` und wird nicht committed.
 
+### Zusätzliche Zugangsdaten für das Zielsystem (Username/Passwort/Cookies)
+
+Für die Verbindung zu den Systemen werden zusätzlich Zugangsdaten benötigt.  
+Diese dürfen **nicht** im Repository stehen und werden deshalb ebenfalls lokal in der `.env` hinterlegt.
+
+Ergänze in deiner `.env` (je nach Systemvorgaben) z. B.:
+
+```env
+TARGET_URL=https://<DEIN_ENDPOINT>
+SYSTEM_USER=DEIN_USERNAME
+SYSTEM_PASS=DEIN_PASSWORT
+SYSTEM_COOKIE=DEINE_COOKIES
+```
+
+
+## Verbindung zu den Systemen testen (Connectivity Check)
+
+Um zu prüfen, ob die Verbindung zum Zielsystem funktioniert (POST Request inkl. Authentication + Cookies), kann das Script `connectivity_check.js` ausgeführt werden.
+
+### Voraussetzungen
+- In der `.env` müssen folgende Variablen gesetzt sein:
+  - `TARGET_URL`
+  - `SYSTEM_USER`
+  - `SYSTEM_PASS`
+  - `SYSTEM_COOKIE` (falls vom System benötigt)
+
+### Payload-Datei
+Das Script liest ein JSON-Payload aus der Datei:
+
+- `src/test_payload.json`
+
+(Die Datei muss lokal vorhanden sein und ein gültiges JSON enthalten.)
+
+### Ausführen
+```bash
+npm run connect
+```
+
 ## Start
 
 ```bash
