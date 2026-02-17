@@ -13,19 +13,19 @@ const ollama = new Ollama({
 });
 
 const Mydocument = z.object({
-    "Table": z.string(),
-    "Field Name": z.string(), 
-    "Change Type": z.enum(["Added", "Removed", "Changed"]),
-    "Field Type": z.string(),
-    "Default": z.null(),
-    "Null": z.literal("not null"),
-    "Description": z.string(),
-    "Documentation": z.string(),
-    "Documentation_Default": z.null(),
-    "Field Label Short": z.string(),
-    "Field Label Middle": z.string(),
-    "Field Label Long": z.string(),
-    "Field Label Header": z.string(),
+  "Table": z.string(),
+  "Field Name": z.string(),
+  "Change Type": z.enum(["Added", "Removed", "Changed", "Modified"]),
+  "Field Type": z.string(),
+  "Default": z.null(),
+  "Null": z.literal("not null"),
+  "Description": z.string(),
+  "Documentation": z.string(),
+  "Documentation_Default": z.null(),
+  "Field Label Short": z.string(),
+  "Field Label Middle": z.string(),
+  "Field Label Long": z.string(),
+  "Field Label Header": z.string(),
 });
 
 const MyArraySchema = z.array(Mydocument);

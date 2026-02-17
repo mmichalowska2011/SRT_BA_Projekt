@@ -20,6 +20,30 @@ export async function chat(model, prompt) {
   return (res?.message?.content ?? "").trim();
 }
 
+
+// messages-basierter chat
+export async function chatMessages(model, messages, options = {}) {
+  const res = await ollama.chat({
+    model,
+    messages,
+    stream: false,
+    options: options?.options, // zB { temperature: 0 }
+  });
+  return res;
+}
+
+// Chat mit Tool Calling
+export async function chatWithTools(model, messages, tools, options = {}) {
+  const res = await ollama.chat({
+    model,
+    messages,
+    tools,
+    stream: false,
+    options: options?.options,
+  });
+  return res;
+}
+
 export function extractJson(text) {
   const trimmed = text.trim();
 
