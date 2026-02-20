@@ -1,48 +1,88 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import fs from "node:fs/promises";
+import chalk from 'chalk';
 
 export async function runCli(host) {
   const rl = createInterface({ input, output });
 
   try {
     while (true) {
-      console.log("\n SRT Wartungs-Host. Wähle:");
-      console.log("1) Aktuelle Version im System abfragen (Platzhalter).");
-      console.log("2) Dokument laden und auf Änderungen prüfen.");
-      console.log("3) Datenelemente auflisten.");
-      console.log("4) Eine Frage stellen.");
-      console.log("0) Exit.");
+      console.log(chalk.blueBright.bold("\n   SRT Wartungs-Host. Wähle:"));
+      console.log(chalk.blue("1) Aktuelle Version im System abfragen (Platzhalter)."));
+      console.log(chalk.blue("2) Dokument laden und auf Änderungen prüfen."));
+      console.log(chalk.blue("3) Datenelemente auflisten."));
+      console.log(chalk.blue("4) Eine Frage stellen."));
+      console.log(chalk.blue("0) Exit."));
 
       const choice = (await rl.question("\nAuswahl: ")).trim();
 
       switch (choice) {
         case "1":
-          await host.showVersionPlaceholder();
+          await host.showVersion();
           break;
 
         case "2": {
-          const filePath = (await rl.question("Dateiname eintragen (txt): ")).trim();
-          await host.checkDocumentForChanges(filePath);
-          break;
+          // const filePath = (await rl.question("Dateiname eintragen (txt): ")).trim();
+          // await host.checkDocumentForChanges(filePath);
+          // break;
+
+          while (true) {
+            const filePath = (await rl.question("Dateiname eintragen oder '0' zur Rückkehr zum Menü: ")).trim();
+
+            if (filePath === "0") {
+              console.log(chalk.yellow("Abgebrochen. Zurück zum Menü."));
+              break;
+            }
+
+            if (!filePath.toLowerCase().endsWith(".txt")) {
+              console.log(chalk.red("Ungültiges Dateiformat. Bitte eine .txt Datei angeben."));
+              continue;
+            }
+
+            try {
+              await fs.access(filePath);
+            } catch {
+              console.log(chalk.red("Datei nicht gefunden. Bitte erneut eingeben."));
+              continue;
+            }
+
+            try {
+              await host.checkDocumentForChanges(filePath);
+              break;
+            } catch (e) {
+              console.log(chalk.red(`Analyse fehlgeschlagen: ${e?.message ?? String(e)}`));
+              console.log(chalk.yellow("Bitte Dateiname prüfen und erneut versuchen."));
+            }
+          }
+          break;s
         }
 
         case "3": {
-          host.showDataElementsList();
+          /* 
+          / --------------------------------------------------------------------------------------------------------
+          /-------------------------- TO DO Fehlermeldung einbauen -------------------------------------------------
+          /-------------------------- wenn falschen Datenformat übergeben ------------------------------------------
+          / --------------------------------------------------------------------------------------------------------
+          */
+          await host.showDataElementsList();
+          // host.showDataElementsList();
           break;
         }
 
         case "4": {
-          const question = (await rl.question("Frage: ")).trim();
+          const question = (await rl.question(chalk.yellow("Frage: "))).trim();
           await host.askLlm(question);
           break;
         }
 
         case "0":
-          console.log("Vorgang beendet");
+          await host.shutdown?.();
+          console.log(chalk.redBright("Vorgang beendet"));
           return;
 
         default:
-          console.log("Ungültige Auswahl.");
+          console.log(chalk.red("Ungültige Auswahl."));
         // ------ Apassen: zurück zur Menüauswahl -------
       }
     }

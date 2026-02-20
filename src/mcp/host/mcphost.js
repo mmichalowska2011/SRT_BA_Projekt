@@ -1,10 +1,7 @@
-import { readTextFile } from "../../io.js";
-import { chatStructured } from "../../llm/ollama_structured.js";
 import { chat, chatWithTools, chatMessages } from "../../llm/ollama_llm.js";
-import { STATES, getStateText } from "../../states/states.js";
+import { STATES } from "../../states/states.js";
+import { AnalysisClient } from "../clients/analysisClient.js";
 import chalk from 'chalk';
-
-// console.log(chalk.blue('Hello world!'));
 
 const TOOLS = [
   {
@@ -25,6 +22,15 @@ const TOOLS = [
       parameters: { type: "object", properties: {}, required: [] },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "get_system_version",
+      description:
+        "Returns the last fetched system version (and optionally fetches it if missing). Use when user asks about system version/build.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
 ];
 
 export class Host {
@@ -34,53 +40,155 @@ export class Host {
     // Platzhalter für spätere Service/MCP-Clients
     this.clients = new Map();
 
+    // this.analysisClient = new AnalysisClient();
+    // this.analysisAnalysisId = null; // oder this.analysisId
+    // this.versionClient = new VersionClient();
+
     // State und Ergebnisse speichern
     this.state = STATES.INITIAL;
     // this.lastChanges = null;
     this.lastChanges = [];
     this.lastSourceFile = null;
+
+    this.systemVersion = null;
   }
 
-  async showVersionPlaceholder() {
-    console.log(chalk.bgYellowBright("\n[Info]"));
-    console.log(chalk.yellowBright("Version-Abfrage ist noch nicht implementiert."));
-    //console.log("[Info] Hier wird später ein Service/MCP-Tool aufgerufen.");    
+  // Zentraler Fetch (Postman-nah)
+  async fetchSystemVersion() {
+    const url = process.env.VERSION_URL;
+    const user = process.env.SYSTEM_USER;
+    const pass = process.env.SYSTEM_PASS;
+
+    if (!url) throw new Error("TARGET_URL fehlt in .env");
+    if (!user || !pass) throw new Error("SYSTEM_USER oder SYSTEM_PASS fehlt in .env");
+
+    const auth = "Basic " + Buffer.from(`${user}:${pass}`, "utf8").toString("base64");
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: auth,
+        // bewusst KEIN Accept setzen (Postman-style)
+      },
+      redirect: "follow",
+    });
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Antwort war kein JSON: ${text}`);
+    }
+
+    let version = data?.SrtBaisVersion;
+
+
+    // if (version === undefined || version === null) {
+    //   throw new Error(`Unerwartetes Response-Format: ${text}`);
+    // }
+
+    version = String(version).trim();
+
+    this.systemVersion = version;
+    return version;
+  }
+
+  // async init() {
+  //   // falls du analysisClient nutzt:
+  //   if (this.analysisClient?.connect) {
+  //     await this.analysisClient.connect();
+  //   }
+
+  //   await this.versionClient.connect();
+  // }
+
+  // async showVersionPlaceholder() {
+  //   console.log(chalk.bgYellowBright("\n[Info]"));
+  //   console.log(chalk.yellowBright("Version-Abfrage ist noch nicht implementiert."));
+  //   //console.log("[Info] Hier wird später ein Service/MCP-Tool aufgerufen.");    
+  // }
+
+  async showVersion() {
+    try {
+      const version = await this.fetchSystemVersion();
+      console.log(chalk.green(`\nSystemversion: ${version}`));
+    } catch (e) {
+      console.log(chalk.red(`\nVersionsabfrage fehlgeschlagen: ${e?.message ?? String(e)}`));
+    }
   }
 
   async checkDocumentForChanges(filePath) {
-    const text = await readTextFile(filePath);
-
     try {
-      const extracted = await chatStructured(this.llmModel, text);
+      const result = await this.analysisClient.analyzeDocument({
+        filePath,
+        model: this.llmModel,
+      });
 
-      // Ergebnis speichern
-      this.lastChanges = extracted;
-      this.lastSourceFile = filePath;
+      // result: { analysisId, changes, dataElements, lastSourceFile }
+      this.analysisAnalysisId = result.analysisId;
 
-      // State abhängig davon, ob neue Datenelemente existieren
-      // Dokument wurde erfolgreich verarbeitet 
+      this.lastChanges = result.changes;           // optional, wenn man es im Host weiter nutzen will
+      this.lastSourceFile = result.lastSourceFile;
+
+      // State Logik bleibt im Host:
       this.state = STATES.ANALYZED;
-
-      // Wenn zusätzlich neue Datenelemente existieren
-      const dataElements = this.listDataElementsToCreate();
-      if (dataElements.length > 0) {
+      if ((result.dataElements ?? []).length > 0) {
         this.state = STATES.VALID;
       }
 
-
-
       console.log("\nDokument wurde erfolgreich analysiert.");
-      if (this.state === "VALID") {
+      if (this.state === STATES.VALID) {
         console.log("Es wurden neue Datenelemente erkannt. Du kannst sie über die Liste anzeigen lassen.");
       } else {
         console.log("[Info] Keine neuen Datenelemente erkannt.");
       }
     } catch (e) {
-      console.log("\n[host] Structured Output Fehler:");
+      console.log("\n[host] Analyse über MCP Client 1 fehlgeschlagen:");
       console.log(e);
       throw e;
     }
   }
+
+  // async checkDocumentForChanges(filePath) {
+  //   const text = await readTextFile(filePath);
+
+  //   try {
+  //     const extracted = await chatStructured(this.llmModel, text);
+
+  //     // Ergebnis speichern
+  //     this.lastChanges = extracted;
+  //     this.lastSourceFile = filePath;
+
+  //     // State abhängig davon, ob neue Datenelemente existieren
+  //     // Dokument wurde erfolgreich verarbeitet 
+  //     this.state = STATES.ANALYZED;
+
+  //     // Wenn zusätzlich neue Datenelemente existieren
+  //     const dataElements = this.listDataElementsToCreate();
+  //     if (dataElements.length > 0) {
+  //       this.state = STATES.VALID;
+  //     }
+
+
+
+  //     console.log("\nDokument wurde erfolgreich analysiert.");
+  //     if (this.state === "VALID") {
+  //       console.log("Es wurden neue Datenelemente erkannt. Du kannst sie über die Liste anzeigen lassen.");
+  //     } else {
+  //       console.log("[Info] Keine neuen Datenelemente erkannt.");
+  //     }
+  //   } catch (e) {
+  //     console.log("\n[host] Structured Output Fehler:");
+  //     console.log(e);
+  //     throw e;
+  //   }
+  // }
 
   // Liste für Datenelemente erstellen + ausgeben
   listDataElementsToCreate() {
@@ -93,16 +201,38 @@ export class Host {
       .filter(Boolean);
   }
 
-  showDataElementsList() {
-    const list = this.listDataElementsToCreate();
-
-    if (list.length === 0) {
-      console.log(chalk.magentaBright("\n[host] Keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen (Dokument analysieren)."));
+  async showDataElementsList() {
+    if (!this.analysisAnalysisId) {
+      console.log(chalk.magentaBright("\n[host] Keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen."));
       return;
     }
+
+    const res = await this.analysisClient.listDataElements({
+      analysisId: this.analysisAnalysisId,
+    });
+
+    const list = res?.dataElements ?? [];
+
+    if (list.length === 0) {
+      console.log(chalk.magentaBright("\n[host] Keine Datenelemente vorhanden."));
+      return;
+    }
+
     console.log("\nEs gibt folgende zu erstellende Datenelemente: ");
     console.log(JSON.stringify(list, null, 2));
   }
+
+
+  // showDataElementsList() {
+  //   const list = this.listDataElementsToCreate();
+
+  //   if (list.length === 0) {
+  //     console.log(chalk.magentaBright("\n[host] Keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen (Dokument analysieren)."));
+  //     return;
+  //   }
+  //   console.log("\nEs gibt folgende zu erstellende Datenelemente: ");
+  //   console.log(JSON.stringify(list, null, 2));
+  // }
 
   getHostStateSnapshot() {
     const changesCount = Array.isArray(this.lastChanges) ? this.lastChanges.length : 0;
@@ -131,6 +261,19 @@ export class Host {
     const toolFns = {
       get_host_state: async () => this.getHostStateSnapshot(),
       list_data_elements_to_create: async () => this.getDataElementsSnapshot(),
+
+      get_system_version: async () => {
+        try {
+          if (this.systemVersion) {
+            return { SrtBaisVersion: this.systemVersion };
+          }
+          const sysVersion = await this.fetchSystemVersion();
+          return { SrtVersion: sysVersion };
+        } catch (e) {
+          return { error: e?.message ?? String(e) };
+        }
+      },
+
     };
 
     const system = [
@@ -139,6 +282,7 @@ export class Host {
       "Wenn der Nutzer nach dem Host-Status/Zustand/Fortschritt oder nach zu erstellenden Datenelementen fragt, MUSST du die verfügbaren Tools verwenden.",
       "Nutze Tools gezielt: Rufe KEINE Tools bei allgemeinen Wissensfragen auf.",
       "Wenn ein Tool-Ergebnis zeigt, dass noch keine Daten vorliegen, erkläre dem Nutzer, was als Nächstes zu tun ist (z. B. Option 2 ausführen).",
+      "Wenn der Nutzer nach Version/Build fragt, MUSST du das Tool 'get_system_version' verwenden.",
     ].join(" ");
 
 
@@ -221,6 +365,11 @@ export class Host {
     const res = await chat(this.llmModel, fallbackPrompt);
     console.log("\n[Antwort]");
     console.log(res);
+  }
+
+  async shutdown() {
+    try { await this.analysisClient?.close?.(); } catch { }
+    try { await this.versionClient?.close?.(); } catch { }
   }
 
   // async askLlm(question) {
