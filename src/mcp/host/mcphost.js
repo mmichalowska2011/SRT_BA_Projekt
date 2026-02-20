@@ -1,6 +1,8 @@
 import { chat, chatWithTools, chatMessages } from "../../llm/ollama_llm.js";
 import { STATES } from "../../states/states.js";
 import { AnalysisClient } from "../clients/analysisClient.js";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import chalk from 'chalk';
 
 const TOOLS = [
@@ -33,27 +35,23 @@ const TOOLS = [
   },
 ];
 
+
 export class Host {
   constructor({ llmModel = "qwen3-vl:235b" } = {}) {
     this.llmModel = llmModel;
-
-    // Platzhalter für spätere Service/MCP-Clients
     this.clients = new Map();
 
-    // this.analysisClient = new AnalysisClient();
-    // this.analysisAnalysisId = null; // oder this.analysisId
-    // this.versionClient = new VersionClient();
+    this.analysisClient = new AnalysisClient();
+    this.analysisAnalysisId = null;
 
     // State und Ergebnisse speichern
     this.state = STATES.INITIAL;
-    // this.lastChanges = null;
     this.lastChanges = [];
     this.lastSourceFile = null;
 
     this.systemVersion = null;
   }
 
-  // Zentraler Fetch (Postman-nah)
   async fetchSystemVersion() {
     const url = process.env.VERSION_URL;
     const user = process.env.SYSTEM_USER;
@@ -68,7 +66,6 @@ export class Host {
       method: "GET",
       headers: {
         Authorization: auth,
-        // bewusst KEIN Accept setzen (Postman-style)
       },
       redirect: "follow",
     });
@@ -88,10 +85,9 @@ export class Host {
 
     let version = data?.SrtBaisVersion;
 
-
-    // if (version === undefined || version === null) {
-    //   throw new Error(`Unerwartetes Response-Format: ${text}`);
-    // }
+    if (version === undefined || version === null) {
+      throw new Error(`Unerwartetes Response-Format: ${text}`);
+    }
 
     version = String(version).trim();
 
@@ -99,20 +95,19 @@ export class Host {
     return version;
   }
 
-  // async init() {
-  //   // falls du analysisClient nutzt:
-  //   if (this.analysisClient?.connect) {
-  //     await this.analysisClient.connect();
-  //   }
+  async init() {
+    // absoluter Pfad zum analysis-server.js
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
 
-  //   await this.versionClient.connect();
-  // }
+    const serverPath = path.resolve(__dirname, "../servers/analysis-server.js");
 
-  // async showVersionPlaceholder() {
-  //   console.log(chalk.bgYellowBright("\n[Info]"));
-  //   console.log(chalk.yellowBright("Version-Abfrage ist noch nicht implementiert."));
-  //   //console.log("[Info] Hier wird später ein Service/MCP-Tool aufgerufen.");    
-  // }
+    this.analysisClient.serverArgs = [serverPath]; // überschreibt Default
+
+    console.log("[host] AnalysisClient connected ✅");
+
+    await this.analysisClient.connect();
+  }
 
   async showVersion() {
     try {
@@ -129,6 +124,10 @@ export class Host {
         filePath,
         model: this.llmModel,
       });
+
+      if (!this.analysisClient) {
+        throw new Error("analysisClient ist nicht initialisiert. init() vergessen?");
+      }
 
       // result: { analysisId, changes, dataElements, lastSourceFile }
       this.analysisAnalysisId = result.analysisId;
@@ -154,41 +153,6 @@ export class Host {
       throw e;
     }
   }
-
-  // async checkDocumentForChanges(filePath) {
-  //   const text = await readTextFile(filePath);
-
-  //   try {
-  //     const extracted = await chatStructured(this.llmModel, text);
-
-  //     // Ergebnis speichern
-  //     this.lastChanges = extracted;
-  //     this.lastSourceFile = filePath;
-
-  //     // State abhängig davon, ob neue Datenelemente existieren
-  //     // Dokument wurde erfolgreich verarbeitet 
-  //     this.state = STATES.ANALYZED;
-
-  //     // Wenn zusätzlich neue Datenelemente existieren
-  //     const dataElements = this.listDataElementsToCreate();
-  //     if (dataElements.length > 0) {
-  //       this.state = STATES.VALID;
-  //     }
-
-
-
-  //     console.log("\nDokument wurde erfolgreich analysiert.");
-  //     if (this.state === "VALID") {
-  //       console.log("Es wurden neue Datenelemente erkannt. Du kannst sie über die Liste anzeigen lassen.");
-  //     } else {
-  //       console.log("[Info] Keine neuen Datenelemente erkannt.");
-  //     }
-  //   } catch (e) {
-  //     console.log("\n[host] Structured Output Fehler:");
-  //     console.log(e);
-  //     throw e;
-  //   }
-  // }
 
   // Liste für Datenelemente erstellen + ausgeben
   listDataElementsToCreate() {
@@ -221,18 +185,6 @@ export class Host {
     console.log("\nEs gibt folgende zu erstellende Datenelemente: ");
     console.log(JSON.stringify(list, null, 2));
   }
-
-
-  // showDataElementsList() {
-  //   const list = this.listDataElementsToCreate();
-
-  //   if (list.length === 0) {
-  //     console.log(chalk.magentaBright("\n[host] Keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen (Dokument analysieren)."));
-  //     return;
-  //   }
-  //   console.log("\nEs gibt folgende zu erstellende Datenelemente: ");
-  //   console.log(JSON.stringify(list, null, 2));
-  // }
 
   getHostStateSnapshot() {
     const changesCount = Array.isArray(this.lastChanges) ? this.lastChanges.length : 0;
@@ -372,44 +324,5 @@ export class Host {
     try { await this.versionClient?.close?.(); } catch { }
   }
 
-  // async askLlm(question) {
-  //   const questions = question.toLowerCase().trim();
-
-  //   // Statusabfrage 
-  //   if (questions.includes("status") || questions.includes("zustand") || questions.includes("zust")) {
-  //     console.log("\n[Antwort]");
-  //     console.log(
-  //       getStateText({
-  //         state: this.state,
-  //         lastChanges: this.lastChanges,
-  //         lastSourceFile: this.lastSourceFile,
-  //       })
-  //     );
-  //     return;
-  //   }
-
-
-  //   // Liste der Datenelemente
-  //   if (questions.includes("liste") && (questions.includes("datenelement") || questions.includes("data element"))) {
-  //     const list = this.listDataElementsToCreate();
-
-  //     if (list.length === 0) {
-  //       console.log("\n[Antwort]");
-  //       console.log("\nEs sind noch keine Ergebnisse vorhanden. Bitte zuerst Option 2 ausführen (Dokument hochladen und analysieren).");
-  //       return;
-  //     }
-
-  //     console.log("\n[Liste] Zu erstellende Datenelemente:");
-  //     console.log(JSON.stringify(list, null, 2));
-  //     return;
-  //   }
-
-  //   console.log("\n[host] Frage wird verarbeitet...");
-  //   const prompt = `Beantworte die folgende Frage präzise und in maximal 10 Sätzen:\n\nFrage: ${question}`;
-  //   const res = await chat(this.llmModel, prompt);
-  //   console.log("\n[Antwort]");
-  //   console.log(res);
-  // }
-
-  // Noch zu ergänzen: connectToServices, Embeddings, plan, toolCalling
+  // Noch zu ergänzen: Embeddings, plan
 }
