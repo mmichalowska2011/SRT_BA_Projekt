@@ -17,10 +17,10 @@
   "description": "This repository is for Development of an autonomous AI agent for automated maintenance of heterogeneous reporting interfaces",
   "main": "newindex.js",
   "scripts": {
+    "build:mcp": "tsc -p tsconfig.mcp.json",
+    "prestart": "npm run build:mcp",
     "start": "node src/index.js",
-    "connect": "node src/connectivity_check.js",
-    "start:validate": "node src/servers/validate-server.js",
-    "start:change": "node src/servers/change-server.js"
+    "connect": "node src/connectivity_check.js"
   },
   "repository": {
     "type": "git",
@@ -32,5 +32,12 @@
   "bugs": {
     "url": "https://github.com/mmichalowska2011/SRT_BA_Projekt/issues"
   },
-  "homepage": "https://github.com/mmichalowska2011/SRT_BA_Projekt#readme"
+  "homepage": "https://github.com/mmichalowska2011/SRT_BA_Projekt#readme",
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "typescript": "^5.9.3"
+  },
+  "imports": {
+    "#root/*": "./src/*"
+  }
 }
